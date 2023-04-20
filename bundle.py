@@ -18,51 +18,47 @@ def replace_chars(title, sub_string, new_char):
         return new_string
     else:
         return title
+    
+def convert_process(current_line, convert_dict):
+    print(f'before: {current_line}')
+    for key, val in convert_dict.items():
+        if key in current_line:
+            current_line = current_line.replace(key, val)
+            print(f'mod: {current_line}')
+    print(f'final: {current_line}') 
+    return current_line
 
 with open(raw, 'r+', encoding='utf-8') as bundle:
     better = []
-    articles = ['A ', 'An ', 'The ', 'Un ', 'Una ', 'Unos ', 'Unas ', 'El ', 'Los ', 'La ', 'Las ', 'Lo ']
-    messy = 'â€™'
-    dash = 'â€“'
-    quote = 'â€œ'
-    nuther = 'â€\x9d'
-    divider = '| '
-    accented_o = 'Ã³'
-    accented_n = 'Ã±'
-
-
+    articles = ['A ', 'An ', 'The ', 'Un ', 'Una ', 'Unos ', 'Unas ', 'El ', 'Los ', 'La ', 'Las ', 'Lo ', 'Der ', 'Die ', 'Das ', 'Ein ', 'Eine ']
+    char_dict = {
+        'â€™': '\'', 'â€“': '-', 'â€œ': '', 'â€\x9d': '', '| ': '', 'Ã³': 'ó', 'Ã±': 'ñ', 'â€¦': '…', 'Ã­': 'í', 'Ã“': 'Ó', 'Ã©': 'é', 'Ã¡': 'á', 'Â¿': '¿', 'â€”': '—', 'Ã¼': 'ü',
+        'ãº': 'ú', 'Ã‰': 'É', 'Â¡': '¡'
+        }
     for line in bundle:
         old_string = line.strip()
-        # print(f'old: {old_string}')
-        # for art in articles:
-            # untouched = True
-            # if old_string.startswith(art):
-                # artless_string = old_string.replace(art, '')
-                # untouched = False
-                # break
-            # else:
-                # continue
-        # if untouched:
-            # artless_string = old_string
-        artless_string = remove_articles(old_string, articles)
-        # print(f'new: {artless_string}')
-        if len(artless_string) > 2 and artless_string[-3] == '~':
+        if len(old_string) > 2 and old_string[-3] == '~':
             truncated = slice(0, -3)
-            better_string = artless_string[truncated]
+            better_string = old_string[truncated]
         else:
             continue
-        if better_string.startswith('Automatic') and better_string.endswith('Update') or better_string.endswith('Marker Resource') or better_string.endswith('Mobile Ed Bonus Offer'):
+        if better_string.startswith('Automatic') and better_string.endswith('Update') or better_string.endswith('Marker Resource'): 
+            continue
+        elif better_string.startswith('Mobile Ed Course (You Choose)') or better_string.endswith('Mobile Ed Bonus Offer'):
             continue
         else:
             real_title = better_string
-        clean_string = replace_chars(real_title, messy, '\'')
-        dashless_string = replace_chars(clean_string, dash, '-')
-        quote_string = replace_chars(dashless_string, quote, '')
-        nuther_string = replace_chars(quote_string, nuther, '')
-        undivided_string = replace_chars(nuther_string, divider, '')
-        accento_string = replace_chars(undivided_string, accented_o, 'ó')
-        accentn_string = replace_chars(accento_string, accented_n, 'ñ')
-        capitalized_string = accentn_string.title()
+        if real_title.startswith('Â¿'):
+            real_title = real_title.replace('Â¿', '')
+            real_title = real_title.replace('?', '')
+        elif real_title.startswith('Â¡'):
+            real_title = real_title.replace('Â¡', '')
+            real_title = real_title.replace('!', '')
+        artless_string = remove_articles(real_title, articles)
+        converted_string = convert_process(artless_string, char_dict)      
+        capitalized_string = converted_string.title()
+        if '\'S' in capitalized_string:
+            capitalized_string = capitalized_string.replace('\'S', '\'s')
         if len(capitalized_string) > 0:
             better.append(capitalized_string)       
     better.sort()
